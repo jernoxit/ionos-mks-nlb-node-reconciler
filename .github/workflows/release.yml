@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - name: package + push Helm chart to GHCR (OCI)
         env:
           VERSION: ${{ needs.image.outputs.version }}
