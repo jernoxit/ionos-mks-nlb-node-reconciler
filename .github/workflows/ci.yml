@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Kept in lockstep with rust-toolchain.toml + the Dockerfile RUST_VERSION by Renovate.
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: rustfmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: build
+        run: cargo build --release --locked
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: helm lint
+        run: |
+          helm lint charts/ionos-mks-nlb-node-reconciler \
+            --set config.datacenterId=00000000-0000-0000-0000-000000000000 \
+            --set config.nlbId=00000000-0000-0000-0000-000000000000 \
+            --set config.targetLanId=1 \
+            --set 'config.ruleIds={00000000-0000-0000-0000-000000000000}' \
+            --set token.value=dummy
+      - name: helm template (render with dummy required values)
+        run: |
+          helm template t charts/ionos-mks-nlb-node-reconciler \
+            --set config.datacenterId=00000000-0000-0000-0000-000000000000 \
+            --set config.nlbId=00000000-0000-0000-0000-000000000000 \
+            --set config.targetLanId=1 \
+            --set 'config.ruleIds={00000000-0000-0000-0000-000000000000}' \
+            --set token.value=dummy > /dev/null
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

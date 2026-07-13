@@ -1,0 +1,19 @@
+apiVersion: v2
+name: ionos-mks-nlb-node-reconciler
+description: Keeps an IONOS Network Load Balancer's forwarding-rule targets in sync with the cluster's Ready nodes (private target-LAN IPs).
+type: application
+# version = the chart's own version; appVersion = the reconciler image tag.
+# Both are overwritten from the git tag by the release workflow.
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/jernoxit/ionos-mks-nlb-node-reconciler
+sources:
+  - https://github.com/jernoxit/ionos-mks-nlb-node-reconciler
+keywords:
+  - ionos
+  - kubernetes
+  - load-balancer
+  - reconciler
+maintainers:
+  - name: jernoxit
+    url: https://github.com/jernoxit

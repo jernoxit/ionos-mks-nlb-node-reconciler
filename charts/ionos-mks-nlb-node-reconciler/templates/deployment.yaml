@@ -1,0 +1,98 @@
+{{- if and (not .Values.token.existingSecret) (not .Values.token.value) }}
+{{- fail "Set either token.existingSecret or token.value (the IONOS API token)." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "reconciler.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "reconciler.labels" . | nindent 4 }}
+spec:
+  # Single replica by design (no leader election): >1 would double-PATCH the NLB.
+  replicas: 1
+  # A short gap on a pod restart is harmless (weekly churn; the NLB's own health
+  # check carries liveness) → Recreate instead of a rolling surge.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "reconciler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "reconciler.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "reconciler.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: health
+              containerPort: {{ .Values.config.healthPort }}
+          env:
+            - name: IONOS_API_URL
+              value: {{ .Values.config.apiUrl | quote }}
+            - name: DATACENTER_ID
+              value: {{ required "config.datacenterId is required" .Values.config.datacenterId | quote }}
+            - name: NLB_ID
+              value: {{ required "config.nlbId is required" .Values.config.nlbId | quote }}
+            - name: TARGET_LAN_ID
+              value: {{ required "config.targetLanId is required" .Values.config.targetLanId | quote }}
+            - name: RULE_IDS
+              value: {{ required "config.ruleIds is required" (join "," .Values.config.ruleIds) | quote }}
+            - name: RESYNC_SECONDS
+              value: {{ .Values.config.resyncSeconds | quote }}
+            - name: HEALTH_PORT
+              value: {{ .Values.config.healthPort | quote }}
+            {{- with .Values.config.logLevel }}
+            - name: RUST_LOG
+              value: {{ . | quote }}
+            {{- end }}
+            - name: IONOS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "reconciler.tokenSecretName" . }}
+                  key: {{ include "reconciler.tokenSecretKey" . }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

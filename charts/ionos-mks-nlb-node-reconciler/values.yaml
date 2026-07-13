@@ -1,0 +1,64 @@
+# -- Container image. Tag defaults to the chart's appVersion.
+image:
+  repository: ghcr.io/jernoxit/ionos-mks-nlb-node-reconciler
+  tag: ""
+  pullPolicy: IfNotPresent
+# -- Only needed if the image package is private. The public GHCR image needs none.
+imagePullSecrets: []
+
+# IONOS / reconciler configuration.
+config:
+  # -- IONOS Cloud API base URL (v6). Override only for a non-default endpoint.
+  apiUrl: https://api.ionos.com/cloudapi/v6
+  # -- REQUIRED. The VDC (datacenter) UUID that holds the MKS worker VMs and the NLB.
+  datacenterId: ""
+  # -- REQUIRED. The IONOS Network Load Balancer UUID whose targets to manage.
+  nlbId: ""
+  # -- REQUIRED. The LAN id (integer, as a string) whose NIC carries each node's
+  # private target-LAN IP.
+  targetLanId: ""
+  # -- REQUIRED. Forwarding-rule UUIDs whose `targets[]` this controller owns.
+  ruleIds: []
+  # -- Resync interval in seconds (a full reconcile runs at least this often).
+  resyncSeconds: 180
+  # -- Health/liveness HTTP port.
+  healthPort: 8080
+  # -- Optional RUST_LOG directive, e.g. "nlb_reconciler=debug".
+  logLevel: ""
+
+# IONOS API token. Provide EITHER an existing Secret, or an inline value (the chart
+# then creates a Secret — only do this with a secrets manager such as SOPS/sealed-secrets;
+# never commit a plaintext token). Use a least-privilege user/token with edit access
+# to the VDC only — no contract/capability privileges are required.
+token:
+  # -- Name of an existing Secret holding the token. Takes precedence over `value`.
+  existingSecret: ""
+  # -- Key within `existingSecret` (or the generated Secret) that holds the token.
+  existingSecretKey: token
+  # -- Inline token value. Ignored when `existingSecret` is set.
+  value: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+rbac:
+  # -- Create the ClusterRole (list/watch nodes) + binding. Nodes are cluster-scoped.
+  create: true
+
+# The controller is single-replica by design: >1 replica without leader election
+# would make multiple reconcilers PATCH the same NLB and thrash the targets.
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

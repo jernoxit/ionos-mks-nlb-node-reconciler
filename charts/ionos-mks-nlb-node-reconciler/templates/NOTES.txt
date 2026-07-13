@@ -1,0 +1,14 @@
+{{ include "reconciler.fullname" . }} is installed in namespace {{ .Release.Namespace }}.
+
+It reconciles the targets[] of these IONOS NLB forwarding rules:
+  datacenter: {{ .Values.config.datacenterId }}
+  nlb:        {{ .Values.config.nlbId }}
+  rules:      {{ join ", " .Values.config.ruleIds }}
+
+Watch it work:
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "reconciler.fullname" . }} -f
+
+You should see a "targets set" line on startup and on every node change/resync.
+If you see "empty target set — PATCH skipped", no Ready node had a private
+target-LAN IP yet — check config.targetLanId and that the node names match the
+IONOS VDC server names.
