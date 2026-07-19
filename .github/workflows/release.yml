@@ -23,6 +23,9 @@ jobs:
       - id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v4
+      # sccache inside the image build (see ci.yml) — the release reuses the
+      # warm CI buildcache, so tagging right after a green main build is cheap.
+      - uses: crazy-max/ghaction-github-runtime@v4
       - uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -42,8 +45,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          secret-envs: |
+            actions_results_url=ACTIONS_RESULTS_URL
+            actions_runtime_token=ACTIONS_RUNTIME_TOKEN
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/buildcache:image
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/buildcache:image,mode=max
 
   release:
     needs: image

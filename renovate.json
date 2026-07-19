@@ -1,23 +1,37 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":dependencyDashboard"],
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard"
+  ],
   "timezone": "Europe/Berlin",
   "packageRules": [
     {
       "description": "Group non-major Cargo updates into one PR.",
-      "matchManagers": ["cargo"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "cargo (non-major)"
     },
     {
       "description": "dtolnay/rust-toolchain versions by BRANCH (1.97.0), not tag — the github-actions manager can't track it. The custom manager below tracks the @<ver> ref as a Rust release instead.",
-      "matchManagers": ["github-actions"],
-      "matchPackageNames": ["dtolnay/rust-toolchain"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "dtolnay/rust-toolchain"
+      ],
       "enabled": false
     },
     {
       "description": "Keep every Rust-version pin in lockstep, in ONE PR: rust-toolchain.toml, the rust:* build image, and the dtolnay/rust-toolchain CI action are all surfaced as depName 'rust'.",
-      "matchDepNames": ["rust"],
+      "matchDepNames": [
+        "rust"
+      ],
       "groupName": "rust"
     }
   ],
@@ -25,29 +39,54 @@
     {
       "customType": "regex",
       "description": "rust-toolchain.toml channel — tracked as a Rust release under depName 'rust'.",
-      "managerFilePatterns": ["/^rust-toolchain\\.toml$/"],
+      "managerFilePatterns": [
+        "/^rust-toolchain\\.toml$/"
+      ],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "rust-lang/rust",
       "depNameTemplate": "rust",
-      "matchStrings": ["channel = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""]
+      "matchStrings": [
+        "channel = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ]
     },
     {
       "customType": "regex",
       "description": "dtolnay/rust-toolchain CI action ref — tracked as a Rust release under depName 'rust' so it bumps WITH the toolchain.",
-      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "rust-lang/rust",
       "depNameTemplate": "rust",
-      "matchStrings": ["dtolnay/rust-toolchain@(?<currentValue>\\d+\\.\\d+\\.\\d+)"]
+      "matchStrings": [
+        "dtolnay/rust-toolchain@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ]
     },
     {
       "customType": "regex",
       "description": "Dockerfile RUST_VERSION ARG — tracked as a Rust release under depName 'rust'.",
-      "managerFilePatterns": ["/^Dockerfile$/"],
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "rust-lang/rust",
       "depNameTemplate": "rust",
-      "matchStrings": ["ARG RUST_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)"]
+      "matchStrings": [
+        "ARG RUST_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "sccache (SCCACHE_VERSION ARG in the Dockerfile; wrapper for the GHA compile cache).",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "mozilla/sccache",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "matchStrings": [
+        "SCCACHE_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ]
     }
   ]
 }
