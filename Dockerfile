@@ -9,7 +9,7 @@ FROM rust:${RUST_VERSION}-${DEBIAN_RELEASE} AS build
 # ACTIONS_CACHE_SERVICE_V2=on is MANDATORY inside the container: without it the
 # ghac backend talks to the cache v1 API (shut down in April 2025) and every
 # write fails silently — reads then degrade to permanent misses.
-ARG SCCACHE_VERSION=0.16.0
+ARG SCCACHE_VERSION=0.17.0
 RUN curl -fsSL "https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
     | tar -xz --strip-components=1 -C /usr/local/bin --wildcards '*/sccache' \
  && chmod +x /usr/local/bin/sccache
