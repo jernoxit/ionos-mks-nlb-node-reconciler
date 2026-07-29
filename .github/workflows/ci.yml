@@ -26,7 +26,7 @@ jobs:
           # PR caches are isolated and evicted on close — only main's cache is
           # ever reused, so only main should pay the save.
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - uses: mozilla-actions/sccache-action@v0.0.10
+      - uses: mozilla-actions/sccache-action@v0.0.11
       - name: Enable sccache (also speeds up dep builds under clippy)
         run: |
           echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
