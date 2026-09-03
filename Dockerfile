@@ -1,5 +1,5 @@
 # Multi-stage cargo build → distroless (nonroot).
-ARG RUST_VERSION=1.98.0
+ARG RUST_VERSION=1.98.1
 ARG DEBIAN_RELEASE=trixie
 
 FROM rust:${RUST_VERSION}-${DEBIAN_RELEASE} AS build
