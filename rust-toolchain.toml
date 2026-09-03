@@ -2,5 +2,5 @@
 # repo targets (line-breaking heuristics and lints change between releases).
 # Kept in lockstep with the CI action + the rust:* build image by Renovate.
 [toolchain]
-channel = "1.98.0"
+channel = "1.98.1"
 components = ["rustfmt", "clippy"]
