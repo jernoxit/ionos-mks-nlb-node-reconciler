@@ -22,7 +22,7 @@ tokio-util = "0.7" # CancellationToken (shut down even during debounce/reconcile
 futures = "0.3"
 # kube 4.0 requires k8s-openapi ^0.28; the k8s-openapi feature = the exact cluster
 # API version (the core/v1 Node type is stable, so this is not tied to your cluster).
-kube = { version = "4.0", default-features = false, features = ["client", "runtime", "rustls-tls"] }
+kube = { version = "5.0", default-features = false, features = ["client", "runtime", "rustls-tls"] }
 k8s-openapi = { version = "0.28", features = ["v1_34"] }
 # rustls TLS (via reqwest's rustls-platform-verifier); the distroless/cc runtime
 # ships ca-certificates, so no explicit root store is needed.
